@@ -1,0 +1,48 @@
+version: "1"
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    volumes:
+      - /var/lib/docker/volumes/prometheus/_data:/etc/prometheus
+      - /var/lib/docker/volumes/prometheus-tsdb/_data:/prometheus-tsdb
+    environment:
+      - TZ=Asia/Taipei
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus-tsdb'
+      - '--storage.tsdb.retention.time=90d' #default save 15天
+
+  collectd:
+    image: collectd
+    container_name: collectd
+    restart: always
+    volumes:
+      - collectd-config:/config
+      - /var/lib/docker/volumes/collectd-config/_data/collectd.conf:/etc/collectd/collectd.conf
+      - /var/lib/docker/volumes/collectd-mibs/_data:/usr/share/snmp/mibs
+    environment:
+      - TZ=Asia/Taipei
+    ports:
+      - "9103:9103/tcp"
+      - "25826:25826/udp"
+    command:
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  collectd-config: # need to declare volumes here,does not need anything underneath this
+  collectd-mibs: # need to declare volumes here,does not need anything underneath this
+  prometheus:
+  prometheus-tsdb:
+  grafana_data: {}
